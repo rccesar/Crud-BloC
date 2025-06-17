@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+
 
 class ModalAdd extends StatefulWidget {
   const ModalAdd({super.key});
@@ -84,10 +86,15 @@ class _ModalAddState extends State<ModalAdd> {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () {
-            print('Título: ${_titleController.text}');
-            print('Descrição: ${_descriptionController.text}');
-            print('Data/Hora: $_selectedDateTime');
+          onPressed: () async {
+            final box = await Hive.openBox('tarefas'); // abre (ou cria) a box
+
+            // adiciona um novo item na box com um Map com seus dados
+            await box.add({
+              'titulo': _titleController.text,
+              'descricao': _descriptionController.text,
+              'dataHora': _selectedDateTime?.toIso8601String(),
+            });
 
             Navigator.pop(context);
           },
