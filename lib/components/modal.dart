@@ -36,6 +36,8 @@ class _ModalAddState extends State<ModalAdd> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
+    if (!mounted) return;
+
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
@@ -69,6 +71,7 @@ class _ModalAddState extends State<ModalAdd> {
       // Adicionando
       await box.add(tarefaData);
     }
+    if (!mounted) return;
 
     Navigator.pop(context);
   }
