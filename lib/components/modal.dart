@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-
 class ModalAdd extends StatefulWidget {
-  const ModalAdd({super.key});
+  final Map? tarefa;
+  final int? index;
+
+  const ModalAdd({super.key, this.tarefa, this.index});
 
   @override
   State<ModalAdd> createState() => _ModalAddState();
@@ -14,20 +16,31 @@ class _ModalAddState extends State<ModalAdd> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _selectedDateTime;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.tarefa != null) {
+      _titleController.text = widget.tarefa!['titulo'] ?? '';
+      _descriptionController.text = widget.tarefa!['descricao'] ?? '';
+      final dataString = widget.tarefa!['dataHora'];
+      if (dataString != null) {
+        _selectedDateTime = DateTime.parse(dataString);
+      }
+    }
+  }
+
   Future<void> _pickDateTime() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDateTime ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
-
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
-
       if (pickedTime != null) {
         setState(() {
           _selectedDateTime = DateTime(
@@ -42,10 +55,30 @@ class _ModalAddState extends State<ModalAdd> {
     }
   }
 
+  Future<void> _saveOrUpdate() async {
+    final box = await Hive.openBox('tarefas');
+    final tarefaData = {
+      'titulo': _titleController.text,
+      'descricao': _descriptionController.text,
+      'dataHora': _selectedDateTime?.toIso8601String(),
+    };
+    if (widget.index != null) {
+      // Editando
+      await box.putAt(widget.index!, tarefaData);
+    } else {
+      // Adicionando
+      await box.add(tarefaData);
+    }
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Adicione Suas Tarefas'),
+      title: Text(
+        widget.tarefa != null ? 'Editar Tarefa' : 'Adicione Sua Tarefa',
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -86,19 +119,8 @@ class _ModalAddState extends State<ModalAdd> {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () async {
-            final box = await Hive.openBox('tarefas'); // abre (ou cria) a box
-
-            // adiciona um novo item na box com um Map com seus dados
-            await box.add({
-              'titulo': _titleController.text,
-              'descricao': _descriptionController.text,
-              'dataHora': _selectedDateTime?.toIso8601String(),
-            });
-
-            Navigator.pop(context);
-          },
-          child: const Text('Salvar'),
+          onPressed: _saveOrUpdate,
+          child: Text(widget.tarefa != null ? 'Atualizar' : 'Salvar'),
         ),
       ],
     );

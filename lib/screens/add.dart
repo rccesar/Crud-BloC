@@ -39,10 +39,72 @@ class _AddState extends State<Add> {
           }
 
           return ListView.builder(
+            padding: const EdgeInsets.all(8),
             itemCount: box.length,
             itemBuilder: (context, index) {
               final tarefa = box.getAt(index);
-              return ListTile(title: Text(tarefa['titulo'] ?? 'Sem título'));
+              final titulo = tarefa['titulo'] ?? 'Sem título';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 198, 200, 235),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        titulo,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return Wrap(
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.edit),
+                                  title: const Text('Editar'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => ModalAdd(
+                                        tarefa: tarefa,
+                                        index: index,
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                ListTile(
+                                  leading: const Icon(Icons.delete),
+                                  title: const Text('Excluir'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    box.deleteAt(index);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
             },
           );
         },
